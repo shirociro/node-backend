@@ -1,0 +1,101 @@
+{
+  "tasks": [
+    {
+      "id": 5,
+      "title": "PHP+Jquery+Bootstrap: Loan Web App System",
+      "status": "completed",
+      "description": "- Loan System based on MVC PHP and bootstrap+jquery\n",
+      "priority": "medium",
+      "created_at": "2025-10-15T11:11:56.270Z",
+      "updated_at": "2025-10-16T17:16:40.197Z"
+    },
+    {
+      "id": 6,
+      "title": "PHP+JQuery+Bootstrap: Messaging and watchlist portal",
+      "status": "completed",
+      "description": "Improvement features update, this system is more like scheduling of email that we send to clients and for watchlist it like a timer dashboard that our techsupport could see, so it was like a dedicated internal  notifciations for their own and team project",
+      "priority": "low",
+      "created_at": "2025-10-15T11:13:49.968Z",
+      "updated_at": "2025-10-16T17:45:52.204Z"
+    },
+    {
+      "id": 7,
+      "title": "ZEND+JQUERY: HRMS portal",
+      "status": "pending",
+      "description": "Handled the feature updates and adjusted the limitation and sometimes do their request to reverse engineer since it's open source code",
+      "priority": "medium",
+      "created_at": "2025-10-15T11:14:37.674Z",
+      "updated_at": "2025-10-16T17:46:12.768Z"
+    },
+    {
+      "id": 8,
+      "title": "VUE3+Go+PrimeVue: One Portal",
+      "status": "completed",
+      "description": "So this is our project for the last 2 years so we combined the all our internal and client systems so they could acccess it using portal, documentation, process, watchlist messaging and icluding ticketing system for the request of the clients ",
+      "priority": "high",
+      "created_at": "2025-10-15T11:15:51.966Z",
+      "updated_at": "2025-10-15T17:29:05.129Z"
+    },
+    {
+      "id": 9,
+      "title": "PHP+VUE2+Bootstrap: hospital monitoring system",
+      "status": "completed",
+      "description": "it was similar to task like an apopintment but more advance that every doctor, nurse, and frontdesk could access, it was a php backend and vue frontend",
+      "priority": "high",
+      "created_at": "2025-10-15T11:17:02.941Z",
+      "updated_at": "2025-10-16T17:16:17.342Z"
+    },
+    {
+      "id": 10,
+      "title": "PHP+VUE1+Bootstrap: Home Caregiver System",
+      "status": "pending",
+      "description": "maanage client employees tasks if completed or not etc.\n",
+      "priority": "medium",
+      "created_at": "2025-10-15T11:17:54.302Z",
+      "updated_at": "2025-10-15T23:51:26.005Z"
+    },
+    {
+      "id": 11,
+      "title": "PHP+VUE2+Vuetify: HPMS ",
+      "status": "completed",
+      "description": "It was a housing real state system, where they store all their customers data so they can use to send like notifications for their expiration or time to renew vue 2",
+      "priority": "high",
+      "created_at": "2025-10-15T11:18:46.013Z",
+      "updated_at": "2025-10-16T18:18:46.024Z"
+    },
+    {
+      "id": 12,
+      "title": "PHP+Vue1+Bootstrap: One Portal Analytics ",
+      "status": "completed",
+      "description": "One page list of important details of all the internal and client data",
+      "priority": "high",
+      "created_at": "2025-10-15T11:19:58.405Z",
+      "updated_at": "2025-10-16T19:41:57.358Z"
+    },
+    {
+      "id": 13,
+      "title": "PHP+Event Scheduler+Powershell: Automated Email",
+      "status": "completed",
+      "description": "using cronjobs and powershel rmm sending email notifications about their account directory expiration",
+      "priority": "low",
+      "created_at": "2025-10-15T11:22:44.812Z",
+      "updated_at": "2025-10-17T00:10:07.974Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice Example",
+      "email": "alice@example.com",
+      "password": "$2b$10$Ecl6sKtydCVJeR3iV3iu4uPnapAnlfT5KYn5/LYQpFQ0kdwhlNjj.",
+      "created_at": "2025-10-15T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Bob Example",
+      "email": "bob@example.com",
+      "password": "password123",
+      "created_at": "2025-10-15T00:00:00.000Z"
+    }
+  ]
+}
