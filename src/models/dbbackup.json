@@ -1,0 +1,99 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Socket",
+      "description": "Implement socket,io upon add and update\n",
+      "priority": "high",
+      "status": "pending",
+      "created_at": "2025-10-19T03:57:52.349Z",
+      "updated_at": "",
+      "order": 7
+    },
+    {
+      "id": 2,
+      "title": "Watchers and Computed",
+      "description": "Deep Learning",
+      "priority": "low",
+      "status": "pending",
+      "created_at": "2025-10-19T05:36:02.171Z",
+      "updated_at": "",
+      "order": 6
+    },
+    {
+      "id": 3,
+      "title": "Life Cycle Hooks",
+      "description": "Deep Learning",
+      "priority": "low",
+      "status": "pending",
+      "created_at": "2025-10-19T05:39:53.845Z",
+      "updated_at": "",
+      "order": 5
+    },
+    {
+      "id": 4,
+      "title": "Async Component",
+      "description": "Deep Learning",
+      "priority": "low",
+      "status": "pending",
+      "created_at": "2025-10-19T05:44:25.452Z",
+      "updated_at": "",
+      "order": 4
+    },
+    {
+      "id": 5,
+      "title": "Implement Suspense",
+      "description": "Implementation\n",
+      "priority": "low",
+      "status": "pending",
+      "created_at": "2025-10-19T06:15:00.202Z",
+      "updated_at": "2025-10-19T06:20:12.000Z",
+      "order": 3
+    },
+    {
+      "id": 6,
+      "title": "Keep Alive and Teleport",
+      "description": "Implementation\nDidn't implement teleport",
+      "priority": "medium",
+      "status": "completed",
+      "created_at": "2025-10-19T06:29:47.999Z",
+      "updated_at": "2025-10-19T19:20:56.326Z",
+      "order": 2
+    },
+    {
+      "id": 7,
+      "title": "Persistence",
+      "description": "Implementation\n",
+      "priority": "low",
+      "status": "completed",
+      "created_at": "2025-10-19T06:39:31.430Z",
+      "updated_at": "2025-10-19T20:58:13.824Z",
+      "order": 1
+    },
+    {
+      "id": 8,
+      "title": "Polish Input Modal & Confirmation Modal",
+      "description": "Remove Redundancy Codes\n",
+      "priority": "low",
+      "status": "completed",
+      "created_at": "2025-10-19T20:15:06.391Z",
+      "updated_at": "2025-10-19T20:41:27.235Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "Alice Example",
+      "email": "alice@example.com",
+      "password": "$2b$10$Ecl6sKtydCVJeR3iV3iu4uPnapAnlfT5KYn5/LYQpFQ0kdwhlNjj.",
+      "created_at": "2025-10-15T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Bob Example",
+      "email": "bob@example.com",
+      "password": "password123",
+      "created_at": "2025-10-15T00:00:00.000Z"
+    }
+  ]
+}

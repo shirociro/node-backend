@@ -6,6 +6,24 @@ export async function listTasks(req, res) {
   await db.read()
   res.json(db.data.tasks)
 }
+export async function listTasksBatch(req, res) {
+  const db = getDb()
+  await db.read()
+
+  const start = parseInt(req.query._start || '0', 10)
+  const limit = parseInt(req.query._limit || '1000', 10)
+
+  const sliced = db.data.tasks.slice(start, start + limit)
+
+  console.log(`Sending tasks ${start} - ${start + limit} (${sliced.length})`)
+  res.json(sliced)
+}
+
+export async function getTasksTotal(req, res) {
+  const db = getDb()
+  await db.read()
+  res.json({ total: db.data.tasks.length })
+}
 
 export async function createTask(req, res) {
   const db = getDb()
