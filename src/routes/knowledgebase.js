@@ -1,14 +1,14 @@
+// routes/tasks.js
 import express from 'express'
-import * as ctrl from '../controllers/knowledgebase.js'
-
+import { verifyToken } from '../middleware/verifyToken.js'
+import * as ctrl from '../controllers/knowledgebaseController.js'
 const router = express.Router()
 
-// router.get('/', ctrl.listTasks)
-router.get('/total', ctrl.getKBsTotal)
-router.get('/', ctrl.listKBsBatch)
+router.get('/total',verifyToken, ctrl.getKBsTotal)
+router.get('/',verifyToken, ctrl.listKBsBatch)
 router.post('/', ctrl.createKB)
 router.patch('/:id', ctrl.patchKB)
 router.put('/:id', ctrl.putKB)
-router.delete('/:id', ctrl.deleteKB)
+router.delete('/:id', ctrl.deleteTask)
 
 export default router

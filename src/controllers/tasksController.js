@@ -1,184 +1,160 @@
-// import { getDb } from '../models/db.js'
-// import { nextId, toNumId } from '../utils/id.js'
-
-// export async function listTasks(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   res.json(db.data.tasks)
-// }
-// export async function listTasksBatch(req, res) {
-//   const db = getDb()
-//   await db.read()
-
-//   const start = parseInt(req.query._start || '0', 10)
-//   const limit = parseInt(req.query._limit || '1000', 10)
-
-//   const sliced = db.data.tasks.slice(start, start + limit)
-
-//   console.log(`Sending tasks ${start} - ${start + limit} (${sliced.length})`)
-//   res.json(sliced)
-// }
-
-// export async function getTasksTotal(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   res.json({ total: db.data.tasks.length })
-// }
-
-// export async function createTask(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   const id = nextId(db.data.tasks)
-//   const now = new Date().toISOString()
-//   const newTask = {
-//     id,
-//     title: req.body.title || '',
-//     description: req.body.description || '',
-//     priority: req.body.priority || 'low',
-//     status: req.body.status || 'pending',
-//     created_at: now,
-//     updated_at: req.body.updated_at || '',
-//     ...req.body,
-//   }
-//   db.data.tasks.push(newTask)
-//   await db.write()
-//   res.status(201).json(newTask)
-// }
-
-// export async function patchTask(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   const id = toNumId(req.params.id)
-//   if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-//   const index = db.data.tasks.findIndex((t) => Number(t.id) === id)
-//   if (index === -1) return res.status(404).json({ error: 'Task not found' })
-//   db.data.tasks[index] = { ...db.data.tasks[index], ...req.body, id }
-//   await db.write()
-//   res.json(db.data.tasks[index])
-// }
-
-// export async function putTask(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   const id = toNumId(req.params.id)
-//   if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-//   const index = db.data.tasks.findIndex((t) => Number(t.id) === id)
-//   if (index === -1) return res.status(404).json({ error: 'Task not found' })
-//   db.data.tasks[index] = { ...req.body, id }
-//   await db.write()
-//   res.json(db.data.tasks[index])
-// }
-
-// export async function deleteTask(req, res) {
-//   const db = getDb()
-//   await db.read()
-//   const id = toNumId(req.params.id)
-//   if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-//   const index = db.data.tasks.findIndex((t) => Number(t.id) === id)
-//   if (index === -1) return res.status(404).json({ error: 'Task not found' })
-//   db.data.tasks.splice(index, 1)
-//   await db.write()
-//   res.json({ message: 'Task deleted', id })
-// }
-
 import { getDb } from '../models/db.js'
-import { nextId, toNumId } from '../utils/id.js'
+import { toNumId } from '../utils/mysql/id.js'
 
-export async function listTasks(req, res) {
-  const db = getDb()
-  await db.read()
-  res.json(db.data.tasks)
-}
-
+// List tasks (paginated via _start & _limit)
 export async function listTasksBatch(req, res) {
-  const db = getDb()
-  await db.read()
-  const start = parseInt(req.query._start || '0', 10)
-  const limit = parseInt(req.query._limit || '1000', 10)
-  const sliced = db.data.tasks.slice(start, start + limit)
-  console.log(`Sending tasks ${start} - ${start + limit} (${sliced.length})`)
-  res.json(sliced)
+  try {
+    const start = Math.max(0, parseInt(req.query._start || '0', 10))
+    const limit = Math.min(1000, Math.max(1, parseInt(req.query._limit || '1000', 10)))
+    const db = getDb()
+
+    const [rows] = await db.execute(
+      `SELECT id, title, description, status, priority, created_at, updated_at
+       FROM tasks
+       ORDER BY created_at DESC
+       LIMIT ? OFFSET ?`,
+      [limit, start]
+    )
+
+    const [[{ total }]] = await db.query('SELECT COUNT(*) AS total FROM tasks')
+    res.setHeader('X-Total-Count', total)
+
+    console.log(`Sending tasks ${start} - ${start + rows.length} (${rows.length})`)
+    return res.json(rows)
+  } catch (err) {
+    console.error('Error fetching task batch:', err)
+    res.status(500).json({ error: 'Database error while fetching tasks' })
+  }
 }
 
 export async function getTasksTotal(req, res) {
-  const db = getDb()
-  await db.read()
-  res.json({ total: db.data.tasks.length })
-}
-
-// ✅ Create Task
-export async function createTask(req, res) {
-  const db = getDb()
-  await db.read()
-  const id = nextId(db.data.tasks)
-  const now = new Date().toISOString()
-  const newTask = {
-    id,
-    title: req.body.title || '',
-    description: req.body.description || '',
-    priority: req.body.priority || 'low',
-    status: req.body.status || 'pending',
-    created_at: now,
-    updated_at: req.body.updated_at || '',
-    ...req.body,
+  try {
+    const db = getDb()
+    const [[{ total }]] = await db.query('SELECT COUNT(*) AS total FROM tasks')
+    return res.json({ total })
+  } catch (err) {
+    console.error('Error fetching task total:', err)
+    res.status(500).json({ error: 'Database error while counting tasks' })
   }
-  db.data.tasks.push(newTask)
-  await db.write()
-
-  // Emit event to all clients
-  const io = req.app.get('io')
-  io.emit('taskUpdated', newTask)
-
-  res.status(201).json(newTask)
 }
 
-// ✅ Patch Task
+export async function createTask(req, res) {
+  try {
+    const { title = '', description = '', priority = 'low', status = 'pending' } = req.body
+    if (!title || title.trim() === '') return res.status(400).json({ error: 'Title is required' })
+
+    const db = getDb()
+    const [result] = await db.execute(
+      `INSERT INTO tasks (title, description, priority, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, NOW(), NOW())`,
+      [title, description, priority, status]
+    )
+
+    const insertId = result.insertId
+    const [rows] = await db.execute(
+      `SELECT id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
+      [insertId]
+    )
+
+    const newTask = rows[0]
+    const io = req.app.get('io')
+    if (io) io.emit('taskUpdated', newTask)
+
+    return res.status(201).json(newTask)
+  } catch (err) {
+    console.error('Error creating task:', err)
+    res.status(500).json({ error: 'Database error while creating task' })
+  }
+}
+
 export async function patchTask(req, res) {
-  const db = getDb()
-  await db.read()
-  const id = toNumId(req.params.id)
-  if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-  const index = db.data.tasks.findIndex(t => Number(t.id) === id)
-  if (index === -1) return res.status(404).json({ error: 'Task not found' })
-  db.data.tasks[index] = { ...db.data.tasks[index], ...req.body, id }
-  await db.write()
+  try {
+    const id = toNumId(req.params.id)
+    if (id === null) return res.status(400).json({ error: 'Invalid ID' })
 
-  const io = req.app.get('io')
-  io.emit('taskUpdated', db.data.tasks[index])
+    const fields = { ...req.body }
+    delete fields.id
 
-  res.json(db.data.tasks[index])
+    const keys = Object.keys(fields)
+    if (keys.length === 0) return res.status(400).json({ error: 'No fields provided' })
+
+    const db = getDb()
+    const setClause = keys.map(k => `\`${k}\` = ?`).join(', ')
+    const values = keys.map(k => fields[k])
+    values.push(id)
+
+    const [result] = await db.execute(
+      `UPDATE tasks SET ${setClause}, updated_at = NOW() WHERE id = ?`,
+      values
+    )
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Task not found' })
+
+    const [rows] = await db.execute(
+      `SELECT id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
+      [id]
+    )
+
+    const updated = rows[0]
+    const io = req.app.get('io')
+    if (io) io.emit('taskUpdated', updated)
+
+    return res.json(updated)
+  } catch (err) {
+    console.error('Error patching task:', err)
+    res.status(500).json({ error: 'Database error while updating task' })
+  }
 }
 
-// ✅ Put Task
 export async function putTask(req, res) {
-  const db = getDb()
-  await db.read()
-  const id = toNumId(req.params.id)
-  if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-  const index = db.data.tasks.findIndex(t => Number(t.id) === id)
-  if (index === -1) return res.status(404).json({ error: 'Task not found' })
-  db.data.tasks[index] = { ...req.body, id }
-  await db.write()
+  try {
+    const id = toNumId(req.params.id)
+    if (id === null) return res.status(400).json({ error: 'Invalid ID' })
 
-  const io = req.app.get('io')
-  io.emit('taskUpdated', db.data.tasks[index])
+    const { title = '', description = '', priority = 'low', status = 'pending' } = req.body
+    if (!title || title.trim() === '') return res.status(400).json({ error: 'Title is required' })
 
-  res.json(db.data.tasks[index])
+    const db = getDb()
+    const [result] = await db.execute(
+      `UPDATE tasks
+       SET title = ?, description = ?, status = ?, priority = ?, updated_at = NOW()
+       WHERE id = ?`,
+      [title, description, status, priority, id]
+    )
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Task not found' })
+
+    const [rows] = await db.execute(
+      `SELECT id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
+      [id]
+    )
+
+    const updated = rows[0]
+    const io = req.app.get('io')
+    if (io) io.emit('taskUpdated', updated)
+
+    return res.json(updated)
+  } catch (err) {
+    console.error('Error putting task:', err)
+    res.status(500).json({ error: 'Database error while replacing task' })
+  }
 }
 
-// ✅ Delete Task
 export async function deleteTask(req, res) {
-  const db = getDb()
-  await db.read()
-  const id = toNumId(req.params.id)
-  if (id === null) return res.status(400).json({ error: 'Invalid ID' })
-  const index = db.data.tasks.findIndex(t => Number(t.id) === id)
-  if (index === -1) return res.status(404).json({ error: 'Task not found' })
-  db.data.tasks.splice(index, 1)
-  await db.write()
+  try {
+    const id = toNumId(req.params.id)
+    if (id === null) return res.status(400).json({ error: 'Invalid ID' })
 
-  const io = req.app.get('io')
-  io.emit('taskDeleted', id)
+    const db = getDb()
+    const [result] = await db.execute('DELETE FROM tasks WHERE id = ?', [id])
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Task not found' })
 
-  res.json({ message: 'Task deleted', id })
+    const io = req.app.get('io')
+    if (io) io.emit('taskDeleted', id)
+
+    return res.json({ message: 'Task deleted', id })
+  } catch (err) {
+    console.error('Error deleting task:', err)
+    res.status(500).json({ error: 'Database error while deleting task' })
+  }
 }

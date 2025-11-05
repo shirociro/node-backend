@@ -1,31 +1,42 @@
-import path from 'path'
-import { fileURLToPath } from 'url'
-import { Low } from 'lowdb'
-import { JSONFile } from 'lowdb/node'
+// models/db.js
+import mysql from 'mysql2'
+import dotenv from 'dotenv'
+dotenv.config()
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-// ✅ db.json is inside the same folder or adjust as needed
-const DB_FILE = path.join(__dirname, 'db.json')
-const adapter = new JSONFile(DB_FILE)
-
-// ✅ Provide default data shape here to prevent missing-default-data error
-const db = new Low(adapter, { tasks: [], users: [] })
+let pool
+let promisePool
 
 export async function initDb() {
-  await db.read()
-  // ensure data structure
-  db.data = db.data || { tasks: [], users: [], knowledgebase: [] }
-  db.data.tasks = db.data.tasks || []
-  db.data.knowledgebase = db.data.knowledgebase || []
-  db.data.users = db.data.users || []
-  await db.write()
+  if (promisePool) return promisePool
+
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASS || '',
+    database: process.env.DB_NAME || 'myappdb',
+    port: parseInt(process.env.DB_PORT || '3306', 10),
+    waitForConnections: true,
+    connectionLimit: parseInt(process.env.DB_CONN_LIMIT || '10', 10),
+    queueLimit: 0,
+  })
+
+  promisePool = pool.promise()
+
+  // test connection
+  try {
+    await promisePool.query('SELECT 1')
+    console.log('MySQL pool initialized')
+  } catch (err) {
+    console.error('MySQL initialization failed:', err)
+    throw err
+  }
+
+  return promisePool
 }
 
 export function getDb() {
-  if (!db.data) throw new Error('Database not initialized — call initDb() first')
-  return db
+  if (!promisePool) {
+    throw new Error('Database not initialized. Call initDb() first.')
+  }
+  return promisePool
 }
-
-export default db

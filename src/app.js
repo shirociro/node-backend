@@ -1,48 +1,15 @@
-// import express from 'express'
-// import bodyParser from 'body-parser'
-// import cors from 'cors'
-// // import tasksRoutes from './lowdb/routes/tasks.js'
-// // import { initDb } from './lowdb/models/db.js'
-
-// import tasksRoutes from './routes/mysql/tasks.js'
-// import knowledgebaseRoutes from './routes/mysql/knowledgebase.js'
-
-// import authRoutes from './routes/auth.js'
-// import { initDb } from './models/mysql/db.js'
-// // import { listUsers } from './controllers/authController.js'
-// import usersRoutes from './routes/mysql/users.js'
-
-// const app = express()
-// app.use(cors())
-// app.use(bodyParser.json({ limit: '50mb' }))
-// app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
-
-// app.use('/tasks', tasksRoutes)
-// app.use('/knowledgebase', knowledgebaseRoutes)
-// app.use('/auth', authRoutes)
-// app.use('/users', usersRoutes)
-
-// export async function createApp() {
-//   await initDb()
-//   return app
-// }
-
-// export default app
-
-// app.js
 import express from 'express'
 import cors from 'cors'
 
-import tasksRoutes from './routes/mysql/tasks.js'
-import knowledgebaseRoutes from './routes/mysql/knowledgebase.js'
+import tasksRoutes from './routes/tasks.js'
+import knowledgebaseRoutes from './routes/knowledgebase.js'
 import authRoutes from './routes/auth.js'
-import usersRoutes from './routes/mysql/users.js'
-import metaRoutes from './routes/mysql/meta.js'
-import { initDb } from './models/mysql/db.js'
+import usersRoutes from './routes/users.js'
+import metaRoutes from './routes/meta.js'
+import { initDb } from './models/db.js'
 
 const app = express()
 
-// CORS - keep your origins as needed
 app.use(cors())
 
 // Use built-in body parsers with higher limits
