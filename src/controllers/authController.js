@@ -4,12 +4,15 @@ import { hashPassword, comparePassword } from '../utils/hash.js'
 import { signToken } from '../utils/jwt.js'
 
 function findUserByEmail(db, email) {
-  return (db.data.users || []).find((u) => String(u.email).toLowerCase() === String(email).toLowerCase())
+  return (db.data.users || []).find(
+    u => String(u.email).toLowerCase() === String(email).toLowerCase()
+  )
 }
 
 export async function register(req, res) {
   const { name, email, password } = req.body || {}
-  if (!email || !password) return res.status(400).json({ message: 'Email and password are required' })
+  if (!email || !password)
+    return res.status(400).json({ message: 'Email and password are required' })
 
   const db = getDb()
   await db.read()
@@ -25,21 +28,27 @@ export async function register(req, res) {
   await db.write()
 
   const token = signToken({ sub: id, name: newUser.name, email: newUser.email })
-  const safeUser = { id: newUser.id, name: newUser.name, email: newUser.email, created_at: newUser.created_at }
+  const safeUser = {
+    id: newUser.id,
+    name: newUser.name,
+    email: newUser.email,
+    created_at: newUser.created_at,
+  }
   res.status(201).json({ token, user: safeUser })
 }
 
 export async function login(req, res) {
   try {
     const { email: rawEmail, password } = req.body || {}
-    if (!rawEmail || !password) return res.status(400).json({ message: 'Email and password are required' })
+    if (!rawEmail || !password)
+      return res.status(400).json({ message: 'Email and password are required' })
 
     const email = String(rawEmail).toLowerCase()
     const db = getDb()
     await db.read()
     db.data.users = db.data.users || []
 
-    const user = (db.data.users || []).find((u) => String(u.email).toLowerCase() === email)
+    const user = (db.data.users || []).find(u => String(u.email).toLowerCase() === email)
     if (!user) return res.status(401).json({ message: 'Invalid email or password' })
 
     let match = false
@@ -57,7 +66,12 @@ export async function login(req, res) {
     if (!match) return res.status(401).json({ message: 'Invalid email or password' })
 
     const token = signToken({ sub: user.id, name: user.name, email: user.email })
-    const safeUser = { id: user.id, name: user.name, email: user.email, created_at: user.created_at }
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      created_at: user.created_at,
+    }
     res.json({ token, user: safeUser })
   } catch (err) {
     res.status(500).json({ message: 'Server error' })
@@ -67,6 +81,11 @@ export async function login(req, res) {
 export async function listUsers(req, res) {
   const db = getDb()
   await db.read()
-  const sanitized = (db.data.users || []).map((u) => ({ id: u.id, name: u.name, email: u.email, created_at: u.created_at }))
+  const sanitized = (db.data.users || []).map(u => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    created_at: u.created_at,
+  }))
   res.json(sanitized)
 }

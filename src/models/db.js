@@ -16,8 +16,9 @@ const db = new Low(adapter, { tasks: [], users: [] })
 export async function initDb() {
   await db.read()
   // ensure data structure
-  db.data = db.data || { tasks: [], users: [] }
+  db.data = db.data || { tasks: [], users: [], knowledgebase: [] }
   db.data.tasks = db.data.tasks || []
+  db.data.knowledgebase = db.data.knowledgebase || []
   db.data.users = db.data.users || []
   await db.write()
 }
