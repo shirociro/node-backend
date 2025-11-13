@@ -1,5 +1,5 @@
 import { getDb } from '../models/db.js'
-import { toNumId } from '../utils/mysql/id.js'
+import { toNumId } from '../utils/id.js'
 
 // List tasks (paginated via _start & _limit)
 export async function listTasksBatch(req, res) {
@@ -9,10 +9,21 @@ export async function listTasksBatch(req, res) {
     const db = getDb()
 
     const [rows] = await db.execute(
-      `SELECT id, title, description, status, priority, created_at, updated_at
-       FROM tasks
-       ORDER BY created_at DESC
-       LIMIT ? OFFSET ?`,
+      `SELECT 
+        t.id,
+        t.user_id,
+        u.firstname,
+        u.lastname,
+        t.title,
+        t.description,
+        t.status,
+        t.priority,
+        t.created_at,
+        t.updated_at
+      FROM users AS u
+      RIGHT JOIN tasks AS t
+        ON t.user_id = u.id
+      LIMIT ? OFFSET ?`,
       [limit, start]
     )
 
@@ -40,23 +51,34 @@ export async function getTasksTotal(req, res) {
 
 export async function createTask(req, res) {
   try {
-    const { title = '', description = '', priority = 'low', status = 'pending' } = req.body
+    const { title = '', description = '', assignee, priority = 'low', status = 'pending' } = req.body
     if (!title || title.trim() === '') return res.status(400).json({ error: 'Title is required' })
 
     const db = getDb()
     const [result] = await db.execute(
-      `INSERT INTO tasks (title, description, priority, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, NOW(), NOW())`,
-      [title, description, priority, status]
+      `INSERT INTO tasks (title, description, priority, status, created_at, updated_at, user_id)
+       VALUES (?, ?, ?, ?, NOW(), NOW(), ?)`,
+      [title, description, priority, status, assignee]
     )
+    if(assignee){
+      const message = 'Task:'+title+' assigned to you'
+        const [result_notif] = await db.execute(
+          `INSERT INTO notifications (user_id, message, is_read)
+          VALUES (?, ?, ?)`,
+          [assignee, message, 0]
+        )
+      const inserNotiftId = result_notif.insertId
 
+    }
     const insertId = result.insertId
+
     const [rows] = await db.execute(
-      `SELECT id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
+      `SELECT id, user_id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
       [insertId]
     )
 
     const newTask = rows[0]
+
     const io = req.app.get('io')
     if (io) io.emit('taskUpdated', newTask)
 
@@ -67,38 +89,38 @@ export async function createTask(req, res) {
   }
 }
 
-export async function patchTask(req, res) {
-  try {
-    const id = toNumId(req.params.id)
-    if (id === null) return res.status(400).json({ error: 'Invalid ID' })
+  export async function patchTask(req, res) {
+    try {
+      const id = toNumId(req.params.id)
+      if (id === null) return res.status(400).json({ error: 'Invalid ID' })
 
-    const fields = { ...req.body }
-    delete fields.id
+      const fields = { ...req.body }
+      delete fields.id
 
-    const keys = Object.keys(fields)
-    if (keys.length === 0) return res.status(400).json({ error: 'No fields provided' })
+      const keys = Object.keys(fields).filter(k => k !== 'created_at' && k !== 'firstname' && k !== 'lastname')
 
-    const db = getDb()
-    const setClause = keys.map(k => `\`${k}\` = ?`).join(', ')
-    const values = keys.map(k => fields[k])
-    values.push(id)
+      if (keys.length === 0) return res.status(400).json({ error: 'No fields provided' })
 
-    const [result] = await db.execute(
-      `UPDATE tasks SET ${setClause}, updated_at = NOW() WHERE id = ?`,
-      values
-    )
+      const db = getDb()
+      const setClause = keys.map(k => `\`${k}\` = ?`).join(', ')
+      const values = keys.map(k => fields[k])
+      values.push(id)
+
+      const [result] = await db.execute(
+        `UPDATE tasks SET ${setClause}, updated_at = NOW() WHERE id = ?`,
+        values
+      )
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Task not found' })
 
     const [rows] = await db.execute(
-      `SELECT id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
+      `SELECT id,user_id, title, description, status, priority, created_at, updated_at FROM tasks WHERE id = ?`,
       [id]
     )
 
     const updated = rows[0]
     const io = req.app.get('io')
     if (io) io.emit('taskUpdated', updated)
-
     return res.json(updated)
   } catch (err) {
     console.error('Error patching task:', err)

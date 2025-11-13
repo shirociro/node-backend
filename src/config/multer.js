@@ -17,11 +17,24 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, profileDir)
   },
+  // filename: (req, file, cb) => {
+  //   // ✅ path.extname safely extracts file extension (".png", ".jpg", etc.)
+  //   const ext = path.extname(file.originalname).toLowerCase()
+  //   const employeeId = req.body.employeeId || 'unknown'
+  //   cb(null, `employee-id-${employeeId}${ext}`)
+  // },
   filename: (req, file, cb) => {
-    // ✅ path.extname safely extracts file extension (".png", ".jpg", etc.)
+  // ✅ Extract file extension safely
     const ext = path.extname(file.originalname).toLowerCase()
-    const employeeId = req.body.employeeId || 'unknown'
-    cb(null, `employee-id-${employeeId}${ext}`)
+
+    // Use firstname + lastname directly
+    const firstname = req.body.firstname.replace(/\s+/g, '_')
+    const lastname = req.body.lastname.replace(/\s+/g, '_')
+
+    // Add timestamp to prevent collisions
+    const timestamp = Date.now()
+
+    cb(null, `${firstname}_${lastname}_${timestamp}${ext}`)
   },
 })
 

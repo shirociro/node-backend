@@ -6,15 +6,15 @@ export async function getMetaData(req, res) {
 
     // You can filter which sets to fetch via query params later (optional)
     const [positions] = await db.execute(
-      'SELECT id, name FROM positions ORDER BY name ASC'
+      'SELECT * FROM user_position ORDER BY name ASC'
     )
 
     const [roles] = await db.execute(
-      'SELECT id, name FROM roles ORDER BY name ASC'
+      'SELECT * FROM user_role ORDER BY name ASC'
     )
 
     const [users] = await db.execute(
-      'SELECT id, first_name, last_name FROM users ORDER BY first_name ASC'
+      'SELECT * FROM users ORDER BY firstname ASC'
     )
 
     // Send all option data together

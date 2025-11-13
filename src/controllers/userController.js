@@ -1,5 +1,5 @@
 import { getDb } from '../models/db.js'
-import { toNumId } from '../utils/mysql/id.js'
+import { toNumId } from '../utils/id.js'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
@@ -28,10 +28,11 @@ export async function listUsersBatch(req, res) {
 
     const [rows] = await db.execute(
       `SELECT u.id, u.firstname, u.lastname, r.name AS role, r.id AS role_id, 
-              p.name AS position, p.id AS position_id 
+              p.name AS position, p.id AS position_id, u.profile 
        FROM users AS u
        JOIN user_role AS r ON u.role_id = r.id
        JOIN user_position AS p ON u.position_id = p.id
+       WHERE u.status = 'active' 
        ORDER BY u.id DESC LIMIT ?, ?`,
       [start, limit]
     )
@@ -76,20 +77,31 @@ export async function createUser(req, res) {
         })
 
     const hashedPassword = await bcrypt.hash(password, 10)
+    // ✅ Build image path if file exists
+    const filePath = req.file ? `/uploads/profile/${req.file.filename}` : null
 
     const [result] = await db.execute(
-      'INSERT INTO users (firstname, lastname, password, position_id, role_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-      [firstname, lastname, hashedPassword, position_id, role_id]
+      'INSERT INTO users (firstname, lastname, password, position_id, role_id, profile, created_at) VALUES (?, ?, ?, ?, ?, ?, NOW())',
+      [firstname, lastname, hashedPassword, position_id, role_id, filePath]
+    )
+    const insertId = result.insertId
+    const [rows] = await db.execute(
+      `SELECT u.id, u.firstname, u.lastname, r.name AS role, r.id AS role_id, 
+              p.name AS position, p.id AS position_id, u.profile 
+       FROM users AS u
+       JOIN user_role AS r ON u.role_id = r.id
+       JOIN user_position AS p ON u.position_id = p.id
+       WHERE u.status = 'active' AND u.id = ?`,
+      [insertId]
     )
 
-    res.status(201).json({
-      id: result.insertId,
-      firstname,
-      lastname,
-      position_id,
-      role_id,
-      created_at: new Date(),
-    })
+    const newUser = rows[0]
+
+    const io = req.app.get('io')
+    if (io) io.emit('userUpdated', newUser)
+    
+    return res.status(201).json(newUser)
+
   } catch (err) {
     console.error('Error creating user:', err)
     res.status(500).json({ error: 'Database error creating user' })
@@ -180,14 +192,20 @@ export async function patchUser(req, res) {
       )
     }
 
-    res.json({
-      id,
-      firstname: newFirst,
-      lastname: newLast,
-      position_id: newPosition,
-      role_id: newRole,
-      status: newStatus,
-    })
+     const [rows] = await db.execute(
+      `SELECT u.id, u.firstname, u.lastname, r.name AS role, r.id AS role_id, 
+              p.name AS position, p.id AS position_id, u.profile 
+       FROM users AS u
+       JOIN user_role AS r ON u.role_id = r.id
+       JOIN user_position AS p ON u.position_id = p.id
+       WHERE u.status = 'active' AND u.id = ?`,
+      [id]
+    )
+
+    const updated = rows[0]
+    const io = req.app.get('io')
+    if (io) io.emit('userUpdated', updated)
+    return res.json(updated)
   } catch (err) {
     console.error('Error patching user:', err)
     res.status(500).json({ error: 'Database error patching user' })
@@ -219,11 +237,19 @@ export async function deleteUser(req, res) {
   try {
     const db = getDb()
     const id = toNumId(req.params.id)
-    const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id])
+    // const [result] = await db.execute('DELETE FROM users WHERE id = ?', [id])
+    const [result] = await db.execute(
+      `UPDATE users SET status = 'inactive' WHERE id = ?`,
+      [id]
+    );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'User not found' })
 
-    res.json({ message: 'User deleted successfully', id })
+    const io = req.app.get('io')
+    if (io) io.emit('userDeleted', id)
+
+    return res.json({ message: 'User deleted', id })
+
   } catch (err) {
     console.error('Error deleting user:', err)
     res.status(500).json({ error: 'Database error deleting user' })

@@ -13,7 +13,7 @@ export async function initDb() {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASS || '',
-    database: process.env.DB_NAME || 'myappdb',
+    database: process.env.DB_NAME || 'project_management',
     port: parseInt(process.env.DB_PORT || '3306', 10),
     waitForConnections: true,
     connectionLimit: parseInt(process.env.DB_CONN_LIMIT || '10', 10),

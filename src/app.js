@@ -6,6 +6,8 @@ import knowledgebaseRoutes from './routes/knowledgebase.js'
 import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
 import metaRoutes from './routes/meta.js'
+import notificationsRoutes from './routes/notifications.js'
+
 import { initDb } from './models/db.js'
 
 const app = express()
@@ -32,7 +34,9 @@ app.use('/tasks', tasksRoutes)
 app.use('/knowledgebase', knowledgebaseRoutes)
 app.use('/auth', authRoutes)
 app.use('/users', usersRoutes)
-app.use('/api/meta', metaRoutes)
+app.use('/meta', metaRoutes)
+app.use('/notifications', notificationsRoutes)
+
 // Optional: health endpoint
 app.get('/health', (req, res) => res.json({ ok: true, uptime: process.uptime() }))
 

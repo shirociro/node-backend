@@ -1,4 +1,3 @@
-// src/routes/email.js
 import express from 'express'
 import nodemailer from 'nodemailer'
 
@@ -40,7 +39,7 @@ export async function initEmailRouter() {
     }
   } catch (err) {
     console.error('Failed to initialize email transporter:', err)
-    throw err // let caller decide what to do (exit or continue)
+    throw err 
   }
 
   router.post('/send-email', async (req, res) => {
